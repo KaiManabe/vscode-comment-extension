@@ -1,6 +1,6 @@
 {
-  "name": "block-comment-generator",
-  "displayName": "Block comment generator",
+  "name": "horizontal-line-comment-generator",
+  "displayName": "Horizontal line comment generator",
   "description": "Generates block comment and horizontal line.",
   "version": "0.0.1",
   "engines": {
@@ -9,13 +9,12 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+     "*"
+  ],
   "main": "./extension.js",
   "contributes": {
-    "commands": [{
-      "command": "block-comment-generator.helloWorld",
-      "title": "Hello World"
-    }]
+    
   },
   "scripts": {
     "lint": "eslint .",

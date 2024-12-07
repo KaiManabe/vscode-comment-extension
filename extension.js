@@ -1,36 +1,143 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
-
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
+	const changeListener = vscode.workspace.onDidChangeTextDocument((event) => {
+		const changes = event.contentChanges;
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "block-comment-generator" is now active!');
+        changes.forEach((change) => {
+			if(change.text == "-"){
+				const start = new vscode.Position(
+					change.range.end.line,
+					Math.max(change.range.end.character - 4, 0)
+				);
+				const end = new vscode.Position(
+					change.range.end.line,
+					change.range.end.character + 1
+				);
+				const changedText = event.document.getText(new vscode.Range(start, end));
+				
+				if(changedText == "-----"){
+					const editor = vscode.window.activeTextEditor;
+					if (editor) {
+						editor.edit((editBuilder) => {
+							let comment = getLineComment(editor.document.languageId);
+							if(comment != ""){
+								editBuilder.delete(new vscode.Range(start, end));
+								editBuilder.insert(start, comment);
+							}
+						});
+					}
+				}
+			}
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('block-comment-generator.helloWorld', function () {
-		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Block comment generator!');
-	});
-
-	context.subscriptions.push(disposable);
+			
+			if(change.text == "="){
+				const start = new vscode.Position(
+					change.range.end.line,
+					Math.max(change.range.end.character - 4, 0)
+				);
+				const end = new vscode.Position(
+					change.range.end.line,
+					change.range.end.character + 1
+				);
+				const changedText = event.document.getText(new vscode.Range(start, end));
+				
+				if(changedText == "====="){
+					const editor = vscode.window.activeTextEditor;
+					if (editor) {
+						editor.edit((editBuilder) => {
+							let comment = getBlockComment(editor.document.languageId, start.character);
+							if(comment != ""){
+								editBuilder.delete(new vscode.Range(start, end));
+								editBuilder.insert(start, comment);
+							}
+						});
+					}
+				}
+			}
+        });
+    });
+	context.subscriptions.push(changeListener);
 }
 
-// This method is called when your extension is deactivated
+
+function getLineComment(lang){
+	let snippet = "";
+	switch (lang) {
+		case "javascript":
+		case "c":
+		case "cpp":
+		case "csharp":
+		case "css":
+		case "php":
+		case "java":
+			snippet = "/* ************************************************************************** */";
+			break;
+		
+		case "python":
+		case "yaml":
+			snippet = "########################################################################";
+			break;
+
+		case "xml":
+		case "html":
+			snippet = "<!-- ======================================================================== -->";
+			break;
+		
+		default:
+			break;
+	}
+	return snippet;
+}
+
+function getBlockComment(lang, indent){
+	let snippet = "";
+	switch (lang) {
+		case "javascript":
+		case "c":
+		case "cpp":
+		case "csharp":
+		case "css":
+		case "php":
+		case "java":
+			snippet = "/* *****************************************************************************\n";
+			for(let i = 0; i < indent; i++) snippet += " ";
+			snippet += "* \n";
+			for(let i = 0; i < indent; i++) snippet += " ";
+			snippet += "***************************************************************************** */";
+			break;
+
+		case "python":
+		case "yaml":
+			snippet = "########################################################################\n";
+			for(let i = 0; i < indent; i++) snippet += " ";
+			snippet += "# \n";
+			for(let i = 0; i < indent; i++) snippet += " ";
+			snippet += "########################################################################";
+			break;
+		
+		case "html":
+		case "xml":
+			snippet = "<!-- ============================================================================\n";
+			for(let i = 0; i < indent; i++) snippet += " ";
+			snippet += "| \n";
+			for(let i = 0; i < indent; i++) snippet += " ";
+			snippet += "============================================================================ -->";
+			break;
+		
+		
+		default:
+			break;
+	}
+	return snippet;
+}
+
 function deactivate() {}
 
 module.exports = {
-	activate,
-	deactivate
-}
+    activate,
+    deactivate
+};
